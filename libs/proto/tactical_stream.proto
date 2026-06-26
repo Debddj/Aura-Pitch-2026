@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package tacticalstream;
+
+message TacticalObservation {
+  string player_id = 1;
+  float position_x = 2;
+  float position_y = 3;
+  float velocity = 4;
+  float heart_rate = 5;
+  repeated float team_formation = 6;
+}
+
+message TacticalResponse {
+  int32 suggested_action = 1;
+  float confidence = 2;
+  repeated float predicted_positions = 3;
+}
+
+service MARLService {
+  rpc PredictTacticalMove(TacticalObservation) returns (TacticalResponse);
+  rpc StreamPredictions(stream TacticalObservation) returns (stream TacticalResponse);
+}

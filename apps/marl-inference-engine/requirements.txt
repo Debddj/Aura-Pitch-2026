@@ -1,0 +1,4 @@
+torch>=2.1.0
+ray[rllib]>=2.9.0
+grpcio>=1.59.0
+protobuf>=4.24.0
