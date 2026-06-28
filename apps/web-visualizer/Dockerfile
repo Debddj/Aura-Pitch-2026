@@ -1,8 +1,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY apps/web-visualizer/package.json ./
-RUN npm install
+COPY apps/web-visualizer/package.json apps/web-visualizer/package-lock.json ./
+RUN npm ci
 COPY apps/web-visualizer/ ./
+RUN mkdir -p ./public
 RUN npm run build
 
 FROM node:20-alpine
