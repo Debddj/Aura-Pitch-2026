@@ -1,13 +1,13 @@
 .PHONY: build up down dev-marl dev-analytics dev-producer dev-visualizer test clean
 
 build:
-	docker-compose -f infra/docker-compose.yml build
+	docker compose -f infra/docker-compose.yml build
 
 up:
-	docker-compose -f infra/docker-compose.yml up -d
+	docker compose -f infra/docker-compose.yml up -d
 
 down:
-	docker-compose -f infra/docker-compose.yml down
+	docker compose -f infra/docker-compose.yml down
 
 dev-marl:
 	cd apps/marl-inference-engine && python src/server.py
@@ -23,10 +23,10 @@ dev-visualizer:
 
 test:
 	@echo "Running verification tests inside Docker containers..."
-	docker-compose -f infra/docker-compose.yml run --rm streaming-analytics python -c "import sys; sys.path.insert(0,'src'); import main; print('Backend verification: OK')"
-	docker-compose -f infra/docker-compose.yml run --rm marl-inference-engine python -c "import torch; print('MARL verification: OK')"
+	docker compose -f infra/docker-compose.yml run --rm streaming-analytics python -c "import sys; sys.path.insert(0,'src'); import main; print('Backend verification: OK')"
+	docker compose -f infra/docker-compose.yml run --rm marl-inference-engine python -c "import torch; print('MARL verification: OK')"
 	@echo "All containerized tests verified."
 
 clean:
-	docker-compose -f infra/docker-compose.yml down -v
+	docker compose -f infra/docker-compose.yml down -v
 	docker system prune -f
