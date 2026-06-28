@@ -22,10 +22,10 @@ dev-visualizer:
 	cd apps/web-visualizer && npm run dev
 
 test:
-	@echo "Running verification tests..."
-	python -c "import torch; print('Torch verification: OK')"
-	python -c "import fastapi; import uvicorn; print('FastAPI/Uvicorn verification: OK')"
-	@echo "All local python packages verified."
+	@echo "Running verification tests inside Docker containers..."
+	docker-compose -f infra/docker-compose.yml run --rm streaming-analytics python -c "import fastapi; import uvicorn; print('Backend verification: OK')"
+	docker-compose -f infra/docker-compose.yml run --rm marl-inference-engine python -c "import torch; print('MARL verification: OK')"
+	@echo "All containerized tests verified."
 
 clean:
 	docker-compose -f infra/docker-compose.yml down -v

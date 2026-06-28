@@ -7,11 +7,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY apps/streaming-analytics/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source and libs/proto
-COPY src/ ./src/
+COPY apps/streaming-analytics/src/ ./src/
 COPY libs/proto/ /libs/proto/
 
 # Setup python paths and compile proto

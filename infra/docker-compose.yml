@@ -2,14 +2,18 @@ version: "3.9"
 
 services:
   marl-inference-engine:
-    build: ../apps/marl-inference-engine
+    build:
+      context: ..
+      dockerfile: apps/marl-inference-engine/Dockerfile
     container_name: marl-inference-engine
     ports:
       - "50051:50051"
     restart: always
 
   streaming-analytics:
-    build: ../apps/streaming-analytics
+    build:
+      context: ..
+      dockerfile: apps/streaming-analytics/Dockerfile
     container_name: streaming-analytics
     ports:
       - "8000:8000"
@@ -20,7 +24,9 @@ services:
     restart: always
 
   telemetry-producer:
-    build: ../apps/telemetry-producer
+    build:
+      context: ..
+      dockerfile: apps/telemetry-producer/Dockerfile
     container_name: telemetry-producer
     environment:
       - ANALYTICS_WS_URL=ws://streaming-analytics:8000/ws/telemetry
@@ -29,7 +35,9 @@ services:
     restart: always
 
   web-visualizer:
-    build: ../apps/web-visualizer
+    build:
+      context: ..
+      dockerfile: apps/web-visualizer/Dockerfile
     container_name: web-visualizer
     ports:
       - "3000:3000"
