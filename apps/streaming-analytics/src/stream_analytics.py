@@ -92,16 +92,54 @@ class StreamAnalytics:
         self.fps = fps
         max_frames = int(self.WINDOW_SECONDS * fps)
         self._buffer: deque[dict] = deque(maxlen=max_frames)
+        self.timestep = 0
+        self.opponent_history = []
+        self.detected_fingerprint = "CALIBRATING..."
 
     def ingest(self, frame: dict):
         """Add a telemetry frame to the sliding buffer."""
         self._buffer.append(frame)
+
+    def update_fingerprint(self, frame: dict):
+        self.timestep += 1
+        players = frame.get("players", [])
+        away_players = [p for p in players if p["team"] == "away"]
+        if not away_players:
+            return
+
+        pts = np.array([[p["position"]["x"], p["position"]["y"]] for p in away_players])
+        speeds = [p["speed"] for p in away_players]
+        self.opponent_history.append((pts, speeds))
+
+        # Once we have 60 frames (3s at 20fps), we classify the tactical fingerprint
+        if len(self.opponent_history) >= 60:
+            def_outfield = [p for p in away_players if p.get("role") != "GK"]
+            if len(def_outfield) >= 3:
+                def_pts = np.array([[p["position"]["x"], p["position"]["y"]] for p in def_outfield])
+                area = _convex_hull_area_2d(def_pts)
+            else:
+                area = 500.0
+
+            pressing = "HIGH_PRESS" if area < 400.0 else "LOW_BLOCK"
+
+            defenders = [p for p in away_players if "CB" in p["role"] or p["role"] in ["LB", "RB"]]
+            if defenders:
+                mean_x = np.mean([p["position"]["x"] for p in defenders])
+                line_depth = "DEEP_LINE" if mean_x > 28.0 else "HIGH_LINE"
+            else:
+                line_depth = "DEEP_LINE"
+
+            avg_speed = np.mean([np.mean(h[1]) for h in self.opponent_history[-60:]])
+            transition = "FAST_BREAK" if avg_speed > 3.0 else "SLOW_BUILD"
+
+            self.detected_fingerprint = f"{pressing} | {line_depth} | {transition}"
 
     def compute(self, frame: dict) -> dict:
         """
         Compute all analytics for the current frame.
         Returns a dict that will be merged into the WebSocket broadcast.
         """
+        self.update_fingerprint(frame)
         players = frame.get("players", [])
         ball = frame.get("ball", {})
 
@@ -116,6 +154,8 @@ class StreamAnalytics:
             "team_compactness": compactness,
             "kinematics": kinematics,
             "passing_lanes": passing_lanes,
+            "opponent_fingerprint": self.detected_fingerprint,
+            "timestep": self.timestep
         }
 
     # ------------------------------------------------------------------

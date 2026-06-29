@@ -26,6 +26,18 @@ export default function PlaybackControls() {
     sendControl("FAST_FORWARD", nextSpeed);
   };
 
+  const triggerSetPiece = async (type: "CORNER_KICK" | "FREE_KICK") => {
+    try {
+      await fetch("http://localhost:8000/api/match/setpiece", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type })
+      });
+    } catch (e) {
+      console.error("Failed to trigger set piece:", e);
+    }
+  };
+
   return (
     <div className="absolute top-4 left-4 z-10 glass-cyan rounded-xl p-3 flex items-center gap-4 shadow-glow">
       {/* Connection Indicator */}
@@ -97,6 +109,24 @@ export default function PlaybackControls() {
           {playbackState === "FAST_FORWARD" && (
             <span className="text-[9px] font-mono font-bold">{playbackSpeed}x</span>
           )}
+        </button>
+
+        {/* Set Pieces Simulators */}
+        <button
+          onClick={() => triggerSetPiece("CORNER_KICK")}
+          disabled={!isConnected}
+          className="p-1.5 rounded transition-all duration-200 text-cyber-muted hover:text-cyber-text hover:bg-cyber-card/40 text-[9px] font-mono font-bold uppercase tracking-wider px-2 border border-cyber-border/30 bg-cyber-bg/40 ml-2"
+          title="Simulate Corner Kick"
+        >
+          Corner
+        </button>
+        <button
+          onClick={() => triggerSetPiece("FREE_KICK")}
+          disabled={!isConnected}
+          className="p-1.5 rounded transition-all duration-200 text-cyber-muted hover:text-cyber-text hover:bg-cyber-card/40 text-[9px] font-mono font-bold uppercase tracking-wider px-2 border border-cyber-border/30 bg-cyber-bg/40"
+          title="Simulate Free Kick"
+        >
+          Free Kick
         </button>
       </div>
 

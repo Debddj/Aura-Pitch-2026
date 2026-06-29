@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15tactical_stream.proto\x12\x0etacticalstream\"\x8e\x01\n\x13TacticalObservation\x12\x11\n\tplayer_id\x18\x01 \x01(\t\x12\x12\n\nposition_x\x18\x02 \x01(\x02\x12\x12\n\nposition_y\x18\x03 \x01(\x02\x12\x10\n\x08velocity\x18\x04 \x01(\x02\x12\x12\n\nheart_rate\x18\x05 \x01(\x02\x12\x16\n\x0eteam_formation\x18\x06 \x03(\x02\"]\n\x10TacticalResponse\x12\x18\n\x10suggested_action\x18\x01 \x01(\x05\x12\x12\n\nconfidence\x18\x02 \x01(\x02\x12\x1b\n\x13predicted_positions\x18\x03 \x03(\x02\x32\xcb\x01\n\x0bMARLService\x12\\\n\x13PredictTacticalMove\x12#.tacticalstream.TacticalObservation\x1a .tacticalstream.TacticalResponse\x12^\n\x11StreamPredictions\x12#.tacticalstream.TacticalObservation\x1a .tacticalstream.TacticalResponse(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15tactical_stream.proto\x12\x0etacticalstream\"\xd4\x01\n\x13TacticalObservation\x12\x11\n\tplayer_id\x18\x01 \x01(\t\x12\x12\n\nposition_x\x18\x02 \x01(\x02\x12\x12\n\nposition_y\x18\x03 \x01(\x02\x12\x10\n\x08velocity\x18\x04 \x01(\x02\x12\x12\n\nheart_rate\x18\x05 \x01(\x02\x12\x16\n\x0eteam_formation\x18\x06 \x03(\x02\x12\x1c\n\x14opponent_fingerprint\x18\x07 \x01(\t\x12\x14\n\x0cis_set_piece\x18\x08 \x01(\x08\x12\x10\n\x08timestep\x18\t \x01(\x05\"\x91\x01\n\x10TacticalResponse\x12\x18\n\x10suggested_action\x18\x01 \x01(\x05\x12\x12\n\nconfidence\x18\x02 \x01(\x02\x12\x1b\n\x13predicted_positions\x18\x03 \x03(\x02\x12\x12\n\nmacro_goal\x18\x04 \x01(\t\x12\x1e\n\x16\x63\x66r_nash_probabilities\x18\x05 \x03(\x02\x32\xcb\x01\n\x0bMARLService\x12\\\n\x13PredictTacticalMove\x12#.tacticalstream.TacticalObservation\x1a .tacticalstream.TacticalResponse\x12^\n\x11StreamPredictions\x12#.tacticalstream.TacticalObservation\x1a .tacticalstream.TacticalResponse(\x01\x30\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,9 +32,9 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'tactical_stream_pb2', _glob
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_TACTICALOBSERVATION']._serialized_start=42
-  _globals['_TACTICALOBSERVATION']._serialized_end=184
-  _globals['_TACTICALRESPONSE']._serialized_start=186
-  _globals['_TACTICALRESPONSE']._serialized_end=279
-  _globals['_MARLSERVICE']._serialized_start=282
-  _globals['_MARLSERVICE']._serialized_end=485
+  _globals['_TACTICALOBSERVATION']._serialized_end=254
+  _globals['_TACTICALRESPONSE']._serialized_start=257
+  _globals['_TACTICALRESPONSE']._serialized_end=402
+  _globals['_MARLSERVICE']._serialized_start=405
+  _globals['_MARLSERVICE']._serialized_end=608
 # @@protoc_insertion_point(module_scope)

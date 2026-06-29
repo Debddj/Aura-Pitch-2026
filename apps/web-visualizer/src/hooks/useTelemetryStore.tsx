@@ -91,10 +91,22 @@ export interface TelemetryFrame {
     passing_lanes: PassingLane[];
   };
   marl: {
-    predictions: Record<string, { suggested_action: number; confidence: number; predicted_position: { x: number; y: number } }>;
+    predictions: Record<
+      string,
+      {
+        suggested_action: number;
+        confidence: number;
+        predicted_position: { x: number; y: number };
+        macro_goal?: string;
+        cfr_nash_probabilities?: number[];
+      }
+    >;
     counter_press_alerts: CounterPressAlert[];
     out_of_position_warnings: OutOfPositionWarning[];
     xg_prediction: number;
+    opponent_fingerprint?: string;
+    is_set_piece?: boolean;
+    set_piece_type?: string;
   };
   observability: {
     e2e_latency_ms: { avg: number; p50: number; p95: number; p99: number };

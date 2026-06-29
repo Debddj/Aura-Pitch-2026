@@ -9,12 +9,17 @@ message TacticalObservation {
   float velocity = 4;
   float heart_rate = 5;
   repeated float team_formation = 6;
+  string opponent_fingerprint = 7;
+  bool is_set_piece = 8;
+  int32 timestep = 9;
 }
 
 message TacticalResponse {
   int32 suggested_action = 1;
   float confidence = 2;
   repeated float predicted_positions = 3;
+  string macro_goal = 4;
+  repeated float cfr_nash_probabilities = 5;
 }
 
 service MARLService {

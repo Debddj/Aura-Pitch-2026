@@ -84,7 +84,7 @@ class MARLClient:
             print(f"Failed to connect to gRPC server at {self.target}: {e}. Fallback enabled.")
             self._connected = False
 
-    def predict(self, player_id: str, x: float, y: float, velocity: float, heart_rate: int, team_formation: list) -> dict:
+    def predict(self, player_id: str, x: float, y: float, velocity: float, heart_rate: int, team_formation: list, opponent_fingerprint: str = "", is_set_piece: bool = False, timestep: int = 0) -> dict:
         """
         Sends player state to the MARL service and gets action suggestion,
         falling back to high-fidelity mathematical heuristic calculations if offline.
@@ -107,7 +107,10 @@ class MARLClient:
                     position_y=y,
                     velocity=velocity,
                     heart_rate=heart_rate,
-                    team_formation=formation
+                    team_formation=formation,
+                    opponent_fingerprint=opponent_fingerprint,
+                    is_set_piece=is_set_piece,
+                    timestep=timestep
                 )
                 
                 response = self.stub.PredictTacticalMove(request, timeout=0.08) # Tight timeout (80ms)
@@ -117,7 +120,9 @@ class MARLClient:
                     "predicted_position": {
                         "x": round(response.predicted_positions[0], 2) if len(response.predicted_positions) > 0 else x,
                         "y": round(response.predicted_positions[1], 2) if len(response.predicted_positions) > 1 else y
-                    }
+                    },
+                    "macro_goal": response.macro_goal or "ATTACK",
+                    "cfr_nash_probabilities": list(response.cfr_nash_probabilities) if response.cfr_nash_probabilities else []
                 }
             except Exception as e:
                 # print(f"gRPC predict failed: {e}. Falling back.")
@@ -143,13 +148,30 @@ class MARLClient:
         pred_x = x + (1.2 if x > 0 else -1.2) * velocity * 0.1
         pred_y = y + random.uniform(-1, 1)
 
+        # Basic HiMARL manager fallback: goal based on player role / position
+        macro_goal = "ATTACK"
+        if abs(x) < 15.0:
+            macro_goal = "HOLD"
+        elif x < 0:
+            macro_goal = "DEFEND"
+
+        # Mock CFR Nash probabilities if set piece is active
+        cfr_probs = []
+        if is_set_piece:
+            # Nash equilibrium strategy profile: [kicker_prob_1, kicker_prob_2, kicker_prob_3, kicker_prob_4, defender_prob_1, ...]
+            # Kicker: SHORT_PASS (0.15), FAR_POST_CROSS (0.50), NEAR_POST_HEADER (0.25), DIRECT_SHOT (0.10)
+            # Defender: MAN_TO_MAN (0.30), ZONAL_MARKING (0.45), HYBRID_BLOCK (0.25)
+            cfr_probs = [0.15, 0.50, 0.25, 0.10, 0.30, 0.45, 0.25]
+
         return {
             "suggested_action": suggested_action,
             "confidence": round(confidence, 2),
             "predicted_position": {
                 "x": round(pred_x, 2),
                 "y": round(pred_y, 2)
-            }
+            },
+            "macro_goal": macro_goal,
+            "cfr_nash_probabilities": cfr_probs
         }
 
 # Import time safely

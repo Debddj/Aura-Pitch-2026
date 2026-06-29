@@ -54,6 +54,14 @@ class PlaybackControlSchema(BaseModel):
     state: str
     speed: float = 1.0
 
+class SetPieceSchema(BaseModel):
+    type: str  # CORNER_KICK or FREE_KICK
+
+# Set-piece simulation state
+active_set_piece = False
+set_piece_type = ""
+set_piece_expiry_time = 0.0
+
 # ---------------------------------------------------------------------------
 # REST Endpoints
 # ---------------------------------------------------------------------------
@@ -91,6 +99,30 @@ async def match_control(control: PlaybackControlSchema):
         "speed": telemetry_engine.playback_speed
     }
 
+@app.post("/api/match/setpiece")
+async def match_setpiece(setpiece: SetPieceSchema):
+    """Triggers a Corner or Free Kick set piece simulation phase."""
+    global active_set_piece, set_piece_type, set_piece_expiry_time
+    active_set_piece = True
+    set_piece_type = setpiece.type.upper()
+    set_piece_expiry_time = time.time() + 5.0  # Active for 5 seconds
+    
+    # Propagate to external producer if connected
+    if producer_ws:
+        try:
+            await producer_ws.send_json({
+                "type": "SET_PIECE",
+                "set_piece_type": set_piece_type
+            })
+        except Exception as e:
+            print(f"Failed to forward set-piece to producer: {e}")
+            
+    return {
+        "status": "success",
+        "type": set_piece_type,
+        "expires_in": 5.0
+    }
+
 # ---------------------------------------------------------------------------
 # Processing and Broadcast Pipeline
 # ---------------------------------------------------------------------------
@@ -100,6 +132,7 @@ async def process_and_broadcast_frame(raw_frame: dict):
     runs MARL inference predictions (gRPC or local fallback), updates MLOps,
     and broadcasts the combined state to all Next.js web clients.
     """
+    global active_set_piece, set_piece_expiry_time
     # 1. Register frame in observability suite
     timestamp = raw_frame.get("timestamp", "")
     if not timestamp:
@@ -122,6 +155,13 @@ async def process_and_broadcast_frame(raw_frame: dict):
     marl_predictions = {}
     out_of_position_warnings = []
     
+    # Manage set-piece simulation timeout
+    if active_set_piece and time.time() > set_piece_expiry_time:
+        active_set_piece = False
+        
+    opponent_fingerprint = analytics.get("opponent_fingerprint", "CALIBRATING...")
+    timestep = analytics.get("timestep", 0)
+    
     for p in players:
         p_id = p["player_id"]
         # Basic team formation vectors as list of floats (using player x, y as context)
@@ -134,7 +174,10 @@ async def process_and_broadcast_frame(raw_frame: dict):
             y=p["position"]["y"],
             velocity=p["speed"],
             heart_rate=p["heart_rate"],
-            team_formation=team_formation
+            team_formation=team_formation,
+            opponent_fingerprint=opponent_fingerprint,
+            is_set_piece=active_set_piece,
+            timestep=timestep
         )
         marl_predictions[p_id] = pred
         
@@ -230,7 +273,10 @@ async def process_and_broadcast_frame(raw_frame: dict):
             "predictions": marl_predictions,
             "counter_press_alerts": counter_press_alerts,
             "out_of_position_warnings": out_of_position_warnings,
-            "xg_prediction": round(xg_prediction, 2)
+            "xg_prediction": round(xg_prediction, 2),
+            "opponent_fingerprint": opponent_fingerprint,
+            "is_set_piece": active_set_piece,
+            "set_piece_type": set_piece_type if active_set_piece else ""
         },
         
         # MLOps Monitoring
